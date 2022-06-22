@@ -26,10 +26,19 @@ The `npm query` commmand exposes a new dependency selector syntax (informed by &
 - `#<name>` dependency selector (equivalent to `[name="..."]`)
 - `#<name>@<version>` (equivalent to `[name=<name>]:semver(<version>)`)
 - `,` selector list delimiter
-- `.` class selector
-- `:` pseudo class selector
+- `.` dependency type selector
+- `:` pseudo selector
 - `>` direct decendent/child selector
 - `~` sibling selector
+
+#### Dependency Type Selectors
+
+- `.prod` dependency found in the `dependencies` section of `package.json`, or is a child of said dependency
+- `.dev` dependency found in the `devDependencies` section of `package.json`, or is a child of said dependency
+- `.optional` dependency found in the `optionalDependencies` section of `package.json`, or has `"optional": true` set in its entry in the `peerDependenciesMeta` section of `package.json`, or a child of said dependency
+- `.peer` dependency found in the `peerDependencies` section of `package.json`
+- `.workspace` dependency found in the `workspaces` section of `package.json`
+- `.bundled` dependency found in the `bundleDependencies` section of `package.json`, or is a child of said dependency
 
 #### Pseudo Selectors
 - [`:not(<selector>)`](https://developer.mozilla.org/en-US/docs/Web/CSS/:not)

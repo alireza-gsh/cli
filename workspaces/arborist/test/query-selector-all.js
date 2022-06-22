@@ -178,28 +178,28 @@ t.test('query-selector-all', async t => {
   const emptyRes = await q(tree, '')
   t.same(emptyRes, [], 'empty query')
 
-  // missing pseudo-class
+  // missing pseudo selector
   t.rejects(
     q(tree, ':foo'),
-    { code: 'EQUERYNOPSEUDOCLASS' },
-    'should throw on missing pseudo-class'
+    { code: 'EQUERYNOPSEUDO' },
+    'should throw on missing pseudo selector'
   )
 
-  // missing class
+  // missing depType
   t.rejects(
     q(tree, '.foo'),
-    { code: 'EQUERYNOCLASS' },
-    'should throw on missing class'
+    { code: 'EQUERYNODEPTYPE' },
+    'should throw on missing dep type'
   )
 
   // missing attribute matcher on :attr
   t.rejects(
     q(tree, ':attr(foo, bar)'),
     { code: 'EQUERYATTR' },
-    'should throw on missing attribute matcher on :attr pseudo-class'
+    'should throw on missing attribute matcher on :attr pseudo'
   )
 
-  // :scope pseudo-class
+  // :scope pseudo
   const [nodeFoo] = await q(tree, '#foo')
   const scopeRes = await querySelectorAll(nodeFoo, ':scope')
   t.same(scopeRes, ['foo@2.2.2'], ':scope')
@@ -302,7 +302,7 @@ t.test('query-selector-all', async t => {
     [':missing', ['missing-dep@^1.0.0']],
     [':private', ['b@1.0.0']],
 
-    // :not pseudo-class
+    // :not pseudo
     [':not(#foo)', [
       'query-selector-all-tests@1.0.0',
       'a@1.0.0',
@@ -330,14 +330,14 @@ t.test('query-selector-all', async t => {
       'b@1.0.0',
     ]],
 
-    // has pseudo-class
+    // has pseudo
     [':root > *:has(* > #bar@1.4.0)', ['foo@2.2.2']],
     ['*:has(* > #bar@1.4.0)', ['foo@2.2.2']],
     ['*:has(> #bar@1.4.0)', ['foo@2.2.2']],
     ['.workspace:has(> * > #lorem)', ['a@1.0.0']],
     ['.workspace:has(* #lorem, ~ #b)', ['a@1.0.0']],
 
-    // is pseudo-class
+    // is pseudo
     [':is(#a, #b) > *', ['bar@2.0.0', 'baz@1.0.0']],
     // TODO: ipsum is not empty but it's child is missing
     // so it doesn't return a result here
@@ -350,7 +350,7 @@ t.test('query-selector-all', async t => {
       'dasher@2.0.0',
     ]],
 
-    // type pseudo-class
+    // type pseudo
     [':type()', [
       'query-selector-all-tests@1.0.0',
       'a@1.0.0',
@@ -378,7 +378,7 @@ t.test('query-selector-all', async t => {
     ]],
     [':type(git)', []],
 
-    // path pseudo-class
+    // path pseudo
     [':path(node_modules/*)', [
       'abbrev@1.1.1',
       'bar@2.0.0',
@@ -410,7 +410,7 @@ t.test('query-selector-all', async t => {
       'lorem@1.0.0',
     ]],
 
-    // semver pseudo-class
+    // semver pseudo
     [':semver()', [
       'query-selector-all-tests@1.0.0',
       'a@1.0.0',
@@ -461,7 +461,7 @@ t.test('query-selector-all', async t => {
     [':semver(=1.4.0)', ['bar@1.4.0']],
     [':semver(1.4.0 || 2.2.2)', ['foo@2.2.2', 'bar@1.4.0']],
 
-    // attr pseudo-class
+    // attr pseudo
     [':attr([name=dasher])', ['dasher@2.0.0']],
     [':attr(dependencies, [bar="^1.0.0"])', ['foo@2.2.2']],
     [':attr(dependencies, :attr([bar="^1.0.0"]))', ['foo@2.2.2']],

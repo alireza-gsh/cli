@@ -7,10 +7,10 @@ const npa = require('npm-package-arg')
 const minimatch = require('minimatch')
 const semver = require('semver')
 
-// handle results for parsed query asts, results are stored in a map that
-// has a key that points to each ast selector node and stores the resulting
-// array of arborist nodes as its value, that is essential to how we handle
-// multiple query selectors, e.g: `#a, #b, #c` <- 3 diff ast selector nodes
+// handle results for parsed query asts, results are stored in a map that has a
+// key that points to each ast selector node and stores the resulting array of
+// arborist nodes as its value, that is essential to how we handle multiple
+// query selectors, e.g: `#a, #b, #c` <- 3 diff ast selector nodes
 class Results {
   #results = null
   #currentAstSelector = null
@@ -33,9 +33,9 @@ class Results {
     this.#results.set(this.#currentAstSelector, value)
   }
 
-  // when collecting results to a root astNode, we traverse the list of
-  // child selector nodes and collect all of their resulting arborist nodes
-  // into a single/flat Set of items, this ensures we also deduplicate items
+  // when collecting results to a root astNode, we traverse the list of child
+  // selector nodes and collect all of their resulting arborist nodes into a
+  // single/flat Set of items, this ensures we also deduplicate items
   collect (rootAstNode) {
     const acc = new Set()
     for (const n of rootAstNode.nodes) {
@@ -90,7 +90,7 @@ const retrieveNodesFromParsedAst = async ({
       return String(pkg[attribute] || '').endsWith(value)
     },
   }))
-  const classesMap = new Map(Object.entries({
+  const depTypesMap = new Map(Object.entries({
     '.prod' (prevResults) {
       return Promise.resolve(prevResults.filter(node =>
         [...node.edgesIn].some(edge => edge.prod)))
@@ -355,15 +355,15 @@ const retrieveNodesFromParsedAst = async ({
   }))
 
   // retrieves the initial items to which start the filtering / matching
-  // for most of the different types of recognized ast nodes, e.g: class,
-  // id, *, etc in different contexts we need to start with the current list
-  // of filtered results, for example a query for `.workspace` actually
-  // means the same as `*.workspace` so we want to start with the full
-  // inventory if that's the first ast node we're reading but if it appears
-  // in the middle of a query it should respect the previous filtered
-  // results, combinators are a special case in which we always want to
-  // have the complete inventory list in order to use the left-hand side
-  // ast node as a filter combined with the element on its right-hand side
+  // for most of the different types of recognized ast nodes, e.g: class (aka
+  // depType), id, *, etc in different contexts we need to start with the
+  // current list of filtered results, for example a query for `.workspace`
+  // actually means the same as `*.workspace` so we want to start with the full
+  // inventory if that's the first ast node we're reading but if it appears in
+  // the middle of a query it should respect the previous filtered results,
+  // combinators are a special case in which we always want to have the
+  // complete inventory list in order to use the left-hand side ast node as a
+  // filter combined with the element on its right-hand side
   const getInitialItems = () => {
     const firstParsed = currentAstNode.parent.nodes[0] === currentAstNode &&
       currentAstNode.parent.parent.type === 'root'
@@ -419,16 +419,16 @@ const retrieveNodesFromParsedAst = async ({
     results.currentResult =
       await processPendingCombinator(prevResults, nextResults)
   }
-  const classType = async () => {
-    const classFn = classesMap.get(String(currentAstNode))
-    if (!classFn) {
+  const depType = async () => {
+    const depTypeFn = depTypesMap.get(String(currentAstNode))
+    if (!depTypeFn) {
       throw Object.assign(
-        new Error(`\`${String(currentAstNode)}\` is not a supported class.`),
-        { code: 'EQUERYNOCLASS' }
+        new Error(`\`${String(currentAstNode)}\` is not a supported dependency type.`),
+        { code: 'EQUERYNODEPTYPE' }
       )
     }
     const prevResults = results.currentResult
-    const nextResults = await classFn(getInitialItems())
+    const nextResults = await depTypeFn(getInitialItems())
     results.currentResult =
       await processPendingCombinator(prevResults, nextResults)
   }
@@ -449,8 +449,8 @@ const retrieveNodesFromParsedAst = async ({
     if (!pseudoFn) {
       throw Object.assign(
         new Error(`\`${currentAstNode.value
-        }\` is not a supported pseudo-class.`),
-        { code: 'EQUERYNOPSEUDOCLASS' }
+        }\` is not a supported pseudo selector.`),
+        { code: 'EQUERYNOPSEUDO' }
       )
     }
     const prevResults = results.currentResult
@@ -473,11 +473,10 @@ const retrieveNodesFromParsedAst = async ({
       await processPendingCombinator(prevResults, nextResults)
   }
 
-  // maps each of the recognized css selectors
-  // to a function that parses it
+  // maps each of the recognized css selectors to a function that parses it
   const retrieveByType = new Map(Object.entries({
     attribute,
-    class: classType,
+    class: depType,
     combinator,
     id,
     pseudo,
@@ -485,8 +484,8 @@ const retrieveNodesFromParsedAst = async ({
     universal,
   }))
 
-  // walks through the parsed css query and update the
-  // current result after parsing / executing each ast node
+  // walks through the parsed css query and update the current result after
+  // parsing / executing each ast node
   const astNodeQueue = new Set()
   rootAstNode.walk((nextAstNode) => {
     astNodeQueue.add(nextAstNode)
@@ -506,8 +505,8 @@ const retrieveNodesFromParsedAst = async ({
 const querySelectorAll = async (targetNode, query) => {
   const rootAstNode = parser(query)
 
-  // results is going to be a Map in which its values are the
-  // resulting items returned for each parsed css ast selector
+  // results is going to be a Map in which its values are the resulting items
+  // returned for each parsed css ast selector
   const inventory = [...targetNode.root.inventory.values()]
   const res = await retrieveNodesFromParsedAst({
     initialItems: inventory,
