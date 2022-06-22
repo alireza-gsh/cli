@@ -12,11 +12,10 @@ const semver = require('semver')
 // arborist nodes as its value, that is essential to how we handle multiple
 // query selectors, e.g: `#a, #b, #c` <- 3 diff ast selector nodes
 class Results {
-  #results = null
+  #results = new Map()
   #currentAstSelector = null
 
   constructor (rootAstNode) {
-    this.#results = new Map()
     this.#currentAstSelector = rootAstNode.nodes[0]
   }
 
@@ -37,13 +36,7 @@ class Results {
   // selector nodes and collect all of their resulting arborist nodes into a
   // single/flat Set of items, this ensures we also deduplicate items
   collect (rootAstNode) {
-    const acc = new Set()
-    for (const n of rootAstNode.nodes) {
-      for (const node of this.#results.get(n)) {
-        acc.add(node)
-      }
-    }
-    return acc
+    return new Set(rootAstNode.nodes.flatMap(n => this.#results.get(n)))
   }
 }
 
@@ -78,7 +71,7 @@ const retrieveNodesFromParsedAst = async ({
       return (String(pkg[attribute] || '').match(/\w+/g) || []).includes(value)
     },
     '*=' ({ attribute, value, pkg }) {
-      return String(pkg[attribute] || '').indexOf(value) > -1
+      return String(pkg[attribute] || '').includes(value)
     },
     '|=' ({ attribute, value, pkg }) {
       return String(pkg[attribute] || '').split('-')[0] === value
@@ -91,42 +84,49 @@ const retrieveNodesFromParsedAst = async ({
     },
   }))
   const depTypesMap = new Map(Object.entries({
-    '.prod' (prevResults) {
-      return Promise.resolve(prevResults.filter(node =>
-        [...node.edgesIn].some(edge => edge.prod)))
+    async '.prod' (prevResults) {
+      return prevResults.filter(node =>
+        [...node.edgesIn].some(edge => edge.prod)
+      )
     },
-    '.dev' (prevResults) {
-      return Promise.resolve(prevResults.filter(node =>
-        [...node.edgesIn].some(edge => edge.dev)))
+    async '.dev' (prevResults) {
+      return prevResults.filter(node =>
+        [...node.edgesIn].some(edge => edge.dev)
+      )
     },
-    '.optional' (prevResults) {
-      return Promise.resolve(prevResults.filter(node =>
-        [...node.edgesIn].some(edge => edge.optional)))
+    async '.optional' (prevResults) {
+      return prevResults.filter(node =>
+        [...node.edgesIn].some(edge => edge.optional)
+      )
     },
-    '.peer' (prevResults) {
-      return Promise.resolve(prevResults.filter(node =>
-        [...node.edgesIn].some(edge => edge.peer)))
+    async '.peer' (prevResults) {
+      return prevResults.filter(node =>
+        [...node.edgesIn].some(edge => edge.peer)
+      )
     },
-    '.workspace' (prevResults) {
-      return Promise.resolve(
-        prevResults.filter(node => node.isWorkspace))
+    async '.workspace' (prevResults) {
+      return prevResults.filter(node =>
+        node.isWorkspace
+      )
     },
-    '.bundled' (prevResults) {
-      return Promise.resolve(
-        prevResults.filter(node => node.inBundle))
+    async '.bundled' (prevResults) {
+      return prevResults.filter(node =>
+        node.inBundle
+      )
     },
   }))
 
-  const hasParent = (node, compareNodes) => {
+  const hasParent = async (node, compareNodes) => {
     if (parentCache.has(node) && parentCache.get(node).has(compareNodes)) {
-      return Promise.resolve(true)
+      return true
     }
     const parentFound = compareNodes.some(compareNode => {
       // follows logical parent for link anscestors
-      return (node.isTop && node.resolveParent) === compareNode ||
+      if (node.isTop && (node.resolveParent === compareNode)) {
+        return true
+      }
       // follows edges-in to check if they match a possible parent
-      [...node.edgesIn].some(edge =>
-        edge && edge.from === compareNode)
+      return [...node.edgesIn].some(edge => edge && edge.from === compareNode)
     })
 
     if (parentFound) {
@@ -136,7 +136,7 @@ const retrieveNodesFromParsedAst = async ({
       parentCache.get(node).add(compareNodes)
     }
 
-    return Promise.resolve(parentFound)
+    return parentFound
   }
 
   // checks if a given node is a descendant of any
@@ -226,17 +226,7 @@ const retrieveNodesFromParsedAst = async ({
           // all its indexes testing for possible objects that may eventually
           // hold more keys specified in a selector
           if (prop === arrayDelimiter) {
-            const newObjs = []
-            for (const obj of objs) {
-              if (Array.isArray(obj)) {
-                obj.forEach((i, index) => {
-                  newObjs.push(obj[index])
-                })
-              } else {
-                newObjs.push(obj)
-              }
-            }
-            objs = newObjs
+            objs = objs.flat()
             continue
           } else {
             // otherwise just maps all currently found objs
