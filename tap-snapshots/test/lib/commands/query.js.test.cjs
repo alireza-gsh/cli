@@ -13,8 +13,8 @@ exports[`test/lib/commands/query.js TAP global > should return global package 1`
     "_id": "lorem@2.0.0",
     "pkgid": "lorem@2.0.0",
     "location": "node_modules/lorem",
-    "path": "{CWD}/test/lib/commands/tap-testdir-query-global/global/lib/node_modules/lorem",
-    "realpath": "{CWD}/test/lib/commands/tap-testdir-query-global/global/lib/node_modules/lorem",
+    "path": "{CWD}/test/lib/commands/tap-testdir-query-global/global/node_modules/lorem",
+    "realpath": "{CWD}/test/lib/commands/tap-testdir-query-global/global/node_modules/lorem",
     "resolved": null,
     "isLink": false,
     "isWorkspace": false
