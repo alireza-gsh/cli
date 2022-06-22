@@ -74,6 +74,43 @@ t.test('workspace query', async t => {
   t.matchSnapshot(joinedOutput(), 'should return workspace object')
 })
 
+t.test('include-workspace-root', async t => {
+  const { npm, joinedOutput } = await loadMockNpm(t, {
+    config: {
+      'include-workspace-root': true,
+      workspaces: ['c'],
+    },
+    prefixDir: {
+      node_modules: {
+        a: {
+          name: 'a',
+          version: '1.0.0',
+        },
+        b: {
+          name: 'b',
+          version: '^2.0.0',
+        },
+        c: t.fixture('symlink', '../c'),
+      },
+      c: {
+        'package.json': JSON.stringify({
+          name: 'c',
+          version: '1.0.0',
+        }),
+      },
+      'package.json': JSON.stringify({
+        name: 'project',
+        workspaces: ['c'],
+        dependencies: {
+          a: '^1.0.0',
+          b: '^1.0.0',
+        },
+      }),
+    },
+  })
+  await npm.exec('query', [':scope'], ['c'])
+  t.matchSnapshot(joinedOutput(), 'should return workspace object and root object')
+})
 t.test('linked node', async t => {
   const { npm, joinedOutput } = await loadMockNpm(t, {
     prefixDir: {

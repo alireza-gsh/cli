@@ -22,6 +22,40 @@ exports[`test/lib/commands/query.js TAP global > should return global package 1`
 ]
 `
 
+exports[`test/lib/commands/query.js TAP include-workspace-root > should return workspace object and root object 1`] = `
+[
+  {
+    "name": "project",
+    "workspaces": [
+      "c"
+    ],
+    "dependencies": {
+      "a": "^1.0.0",
+      "b": "^1.0.0"
+    },
+    "pkgid": "project@",
+    "location": "",
+    "path": "{CWD}/test/lib/commands/tap-testdir-query-include-workspace-root/prefix",
+    "realpath": "{CWD}/test/lib/commands/tap-testdir-query-include-workspace-root/prefix",
+    "resolved": null,
+    "isLink": false,
+    "isWorkspace": false
+  },
+  {
+    "name": "c",
+    "version": "1.0.0",
+    "_id": "c@1.0.0",
+    "pkgid": "c@1.0.0",
+    "location": "c",
+    "path": "{CWD}/test/lib/commands/tap-testdir-query-include-workspace-root/prefix/c",
+    "realpath": "{CWD}/test/lib/commands/tap-testdir-query-include-workspace-root/prefix/c",
+    "resolved": null,
+    "isLink": false,
+    "isWorkspace": true
+  }
+]
+`
+
 exports[`test/lib/commands/query.js TAP linked node > should return linked node res 1`] = `
 [
   {
